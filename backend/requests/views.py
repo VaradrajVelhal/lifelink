@@ -18,19 +18,29 @@ class CreateRequestView(APIView):
 
         if serializer.is_valid():
             blood_request = serializer.save(hospital=request.user)
+            
+            from .tasks import process_blood_request
+            process_blood_request.delay(blood_request.id)
 
-            #AUTO MATCH HERE
-            matched_donors = DonorProfile.objects.filter(
-                blood_group=blood_request.blood_group,
-                city=blood_request.city,
-                available=True
-            )
+            return Response(serializer.data, status=201)
 
-            for donor in matched_donors:
-                Notification.objects.create(
-                    donor=donor,
-                    message=f"Urgent need for {blood_request.blood_group} blood in {blood_request.city}"
-                )
+        return Response(serializer.errors, status=400)
+
+class CreateOrganRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .serializers import OrganRequestSerializer
+        if request.user.role != 'hospital':
+            return Response({"error": "Only hospitals can create requests"}, status=403)
+
+        serializer = OrganRequestSerializer(data=request.data)
+
+        if serializer.is_valid():
+            organ_request = serializer.save(hospital=request.user)
+            
+            from .tasks import process_organ_request
+            process_organ_request.delay(organ_request.id)
 
             return Response(serializer.data, status=201)
 
@@ -124,4 +134,20 @@ class ListRequestsView(APIView):
         requests = BloodRequest.objects.filter(hospital=request.user).order_by('-id')
         serializer = BloodRequestSerializer(requests, many=True)
 
-        return Response(serializer.data)
+
+class FulfillRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, request_id):
+        if request.user.role != 'hospital':
+            return Response({"error": "Only hospitals allowed"}, status=403)
+
+        try:
+            blood_request = BloodRequest.objects.get(id=request_id, hospital=request.user)
+        except BloodRequest.DoesNotExist:
+            return Response({"error": "Request not found or not authorized"}, status=404)
+
+        blood_request.status = 'fulfilled'
+        blood_request.save()
+
+        return Response({"message": "Request marked as fulfilled"})
