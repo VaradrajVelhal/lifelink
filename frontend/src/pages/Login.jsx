@@ -48,7 +48,7 @@ function Login() {
       } else {
         setError(data.error || "Authentication failed. Please check your credentials.");
       }
-    } catch (err) {
+    } catch {
       setIsSubmitting(false);
       setError("Network error. Please try again.");
     }

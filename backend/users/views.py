@@ -4,7 +4,7 @@ from rest_framework import status
 from .serializers import RegisterSerializer
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
-from requests.models import BloodRequest
+from blood_requests.models import BloodRequest
 from donors.models import DonorProfile, Donation
 
 class RegisterView(APIView):
