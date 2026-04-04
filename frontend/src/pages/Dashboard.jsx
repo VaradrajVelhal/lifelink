@@ -84,7 +84,7 @@ function Dashboard() {
         fetchRequests();
         fetchStats();
       }
-    } catch (err) {
+    } catch {
       alert("Failed to accept request");
     }
   };
@@ -97,7 +97,7 @@ function Dashboard() {
         fetchRequests();
         fetchStats();
       }
-    } catch (err) {
+    } catch {
       alert("Failed to complete request");
     }
   };
@@ -282,7 +282,7 @@ function CreateRequestModal({ onClose, onCreated }) {
         onCreated();
         onClose();
       }
-    } catch (err) {
+    } catch {
       alert("Error creating request");
     }
   };
