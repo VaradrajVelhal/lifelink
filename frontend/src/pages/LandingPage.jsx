@@ -1,192 +1,91 @@
-import { motion, AnimatePresence, useMotionValue, useTransform, animate, useInView } from "framer-motion";
-import { HeartPulse, Droplet, Bell, ArrowRight, ShieldCheck, Activity } from "lucide-react";
+import { Droplet, Heart, Shield, ArrowRight, Activity, Users, Building } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { useEffect, useState, useRef } from "react";
-
-function AnimatedCounter({ value }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, Math.round);
-
-  useEffect(() => {
-    if (isInView) {
-      const animation = animate(count, value, { duration: 2 });
-      return animation.stop;
-    }
-  }, [value, count, isInView]);
-
-  return <motion.span ref={ref}>{rounded}</motion.span>;
-}
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 300, damping: 24 }
-  }
-};
 
 export default function LandingPage() {
-  const [stats, setStats] = useState({ total_donors: 0, total_hospitals: 0, total_successful_matches: 0 });
-
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/users/stats/")
-      .then(res => res.json())
-      .then(data => setStats(data))
-      .catch(err => console.error(err));
-  }, []);
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
-      <Navbar title="Welcome" isLanding={true} />
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-red-100 selection:text-red-900">
+      <Navbar isLanding={true} />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
-        <motion.div
-           initial={{ opacity: 0, scale: 0.9 }}
-           animate={{ opacity: 1, scale: 1 }}
-           transition={{ duration: 0.8, ease: "easeOut" }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rose-200/40 rounded-full blur-3xl -z-10 pointer-events-none"
-        />
+      <section className="relative pt-24 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-red-50 rounded-full blur-3xl -z-10 opacity-60"></div>
         
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          <span className="inline-block py-1 px-3 rounded-full bg-rose-100 text-rose-600 text-sm font-bold tracking-wide mb-6 shadow-sm border border-rose-200">
-            LIFELINK IS LIVE
-          </span>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
-            Seconds Matter. <br/>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-400">
-              Save a Life Today.
-            </span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-xl text-slate-600 mb-10 font-medium leading-relaxed">
-            Your blood is a miracle looking for a place to happen. Be the reason for someone's heartbeat today.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth">
-              <motion.button 
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(225, 29, 72, 0.2)" }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-rose-500 hover:bg-rose-600 transition-colors text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg"
-              >
-                Register as Donor <ArrowRight size={20} />
-              </motion.button>
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Feature Grid */}
-      <section className="py-24 bg-white relative border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={containerVariants}
-            className="text-center mb-16"
-          >
-            <motion.h2 variants={itemVariants} className="text-4xl font-black text-slate-900 mb-4">
-              How LifeLink Works
-            </motion.h2>
-            <motion.p variants={itemVariants} className="text-slate-500 text-lg max-w-2xl mx-auto">
-              Powered by advanced spatial routing and real-time WebSockets, bridging the gap between donors and hospitals instantly.
-            </motion.p>
-          </motion.div>
-
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {/* Feature 1 */}
-            <motion.div variants={itemVariants} className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-rose-200 transition-colors group cursor-default shadow-sm hover:shadow-md">
-              <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Droplet size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Blood Matching</h3>
-              <p className="text-slate-600 leading-relaxed">Geo-spatial matching ensures you find exactly the blood group you need from donors under 15km away.</p>
-            </motion.div>
-            
-            {/* Feature 2 */}
-            <motion.div variants={itemVariants} className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-teal-200 transition-colors group cursor-default shadow-sm hover:shadow-md">
-              <div className="w-16 h-16 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <HeartPulse size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Organ Pledging</h3>
-              <p className="text-slate-600 leading-relaxed">Securely pledge life-saving organs. Hospitals are notified instantly when a critical transplant is required.</p>
-            </motion.div>
-
-            {/* Feature 3 */}
-            <motion.div variants={itemVariants} className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors group cursor-default shadow-sm hover:shadow-md">
-              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Bell size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Instant Alerts</h3>
-              <p className="text-slate-600 leading-relaxed">Zero-latency WebSocket infrastructure pushes emergency popup alerts directly to your dashboard.</p>
-            </motion.div>
-          </motion.div>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 text-sm font-black mb-8 border border-red-100">
+          <Activity size={16} /> <span>EMERGENCY RESPONSE SYSTEM</span>
+        </div>
+        
+        <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[0.9]">
+          Every Drop <br/>
+          <span className="text-red-600">Saves a Life.</span>
+        </h1>
+        
+        <p className="max-w-2xl mx-auto text-xl text-gray-500 mb-12 font-medium leading-relaxed">
+          LifeLink simplifies blood donation by connecting donors with hospitals in real-time. 
+          No complex jargon, just immediate action.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
+          <Link to="/auth" className="px-10 py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all shadow-2xl shadow-red-100 transform hover:-translate-y-1">
+            Get Started Now <ArrowRight size={24} />
+          </Link>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
-        {/* Decorative Grid SVG */}
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center"
-          >
-             <motion.div variants={itemVariants}>
-                <div className="flex justify-center mb-4"><HeartPulse size={48} className="text-orange-400" /></div>
-                <h4 className="text-5xl font-black mb-2"><AnimatedCounter value={stats.total_donors} />+</h4>
-                <p className="text-slate-400 font-bold tracking-widest text-xs">ACTIVE DONORS</p>
-             </motion.div>
-             <motion.div variants={itemVariants}>
-                <div className="flex justify-center mb-4"><Droplet size={48} className="text-blue-400" /></div>
-                <h4 className="text-5xl font-black mb-2"><AnimatedCounter value={stats.total_hospitals} />+</h4>
-                <p className="text-slate-400 font-bold tracking-widest text-xs">VERIFIED HOSPITALS</p>
-             </motion.div>
-             <motion.div variants={itemVariants}>
-                <div className="flex justify-center mb-4"><Activity size={48} className="text-rose-500" /></div>
-                <h4 className="text-5xl font-black mb-2"><AnimatedCounter value={stats.total_successful_matches} /></h4>
-                <p className="text-slate-400 font-bold tracking-widest text-xs">LIVES SAVED</p>
-             </motion.div>
-             <motion.div variants={itemVariants}>
-                <div className="flex justify-center mb-4"><ShieldCheck size={48} className="text-teal-400" /></div>
-                <h4 className="text-5xl font-black mb-2">&lt;15km</h4>
-                <p className="text-slate-400 font-bold tracking-widest text-xs">RADIUS MATCHING</p>
-             </motion.div>
-          </motion.div>
+      {/* Features */}
+      <section className="py-32 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <FeatureCard 
+            icon={<Droplet size={32} className="text-red-600" />}
+            title="Blood Requests"
+            description="Hospitals can create urgent blood requests that are instantly visible to all eligible donors."
+          />
+          <FeatureCard 
+            icon={<Users size={32} className="text-blue-600" />}
+            title="Donor Network"
+            description="A dedicated community of donors ready to respond to emergencies and save lives."
+          />
+          <FeatureCard 
+            icon={<Shield size={32} className="text-green-600" />}
+            title="Verified Access"
+            description="Secure session-based authentication ensures that only verified hospitals and donors interact."
+          />
         </div>
       </section>
+
+      {/* Statistics */}
+      <section className="bg-gray-900 py-32 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-16 text-center">
+          <StatBox label="Active Donors" value="1,200+" />
+          <StatBox label="Partner Hospitals" value="50+" />
+          <StatBox label="Successful Donations" value="4,500+" />
+        </div>
+      </section>
+      
+      <footer className="py-12 text-center text-gray-400 text-sm font-medium">
+        © 2026 LifeLink Platform. Built for Maximum Impact.
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }) {
+  return (
+    <div className="p-10 rounded-[2.5rem] bg-gray-50 border border-gray-100 hover:border-red-200 transition-all group">
+      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-black mb-4">{title}</h3>
+      <p className="text-gray-500 font-medium leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function StatBox({ label, value }) {
+  return (
+    <div>
+      <p className="text-6xl font-black text-white mb-2">{value}</p>
+      <p className="text-red-500 font-black tracking-widest text-xs uppercase">{label}</p>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ArrowRight, UserPlus, LogIn, Lock, Mail, Phone, Building, Heart, ArrowLeft } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Shield, ArrowRight, UserPlus, LogIn, Lock, Mail, Phone, Building, Heart, Droplet } from "lucide-react";
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,207 +9,188 @@ function Login() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("donor"); // 'donor' | 'hospital'
+  const [role, setRole] = useState("donor");
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleAuth = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
 
-    if (isLogin) {
-      fetch("http://127.0.0.1:8000/api/users/login/", {
+    const url = isLogin ? "http://127.0.0.1:8000/api/users/login/" : "http://127.0.0.1:8000/api/users/register/";
+    const body = isLogin ? { username, password } : { username, password, email, role, phone };
+
+    try {
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setIsSubmitting(false);
-          if (data.access) {
-            localStorage.setItem("access", data.access);
-            localStorage.setItem("role", data.role);
-            localStorage.setItem("is_admin", data.is_admin);
-            localStorage.setItem("username", username);
-            if (data.is_admin) {
-              navigate("/admin-dashboard");
-            } else {
-              navigate(data.role === "donor" ? "/donor-dashboard" : "/hospital-dashboard");
-            }
-          } else {
-            setError(data.error || "Invalid credentials");
-          }
-        })
-        .catch(() => {
-          setIsSubmitting(false);
-          setError("Network error. Please try again.");
-        });
-    } else {
-      fetch("http://127.0.0.1:8000/api/users/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, email, role, phone }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          setIsSubmitting(false);
-          if (res.ok) {
-            setIsLogin(true);
-            setError("");
-            setPassword("");
-            alert("Registration successful! Please log in.");
-          } else {
-            const errMsgs = Object.values(data).flat().join(", ");
-            setError(errMsgs || "Registration failed");
-          }
-        })
-        .catch(() => {
-          setIsSubmitting(false);
-          setError("Network error. Please try again.");
-        });
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      setIsSubmitting(false);
+
+      if (res.ok) {
+        if (isLogin) {
+          localStorage.setItem("username", data.username);
+          localStorage.setItem("role", data.role);
+          navigate("/dashboard");
+        } else {
+          setIsLogin(true);
+          setPassword("");
+          alert("Registration successful! Please log in.");
+        }
+      } else {
+        setError(data.error || "Authentication failed. Please check your credentials.");
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      setError("Network error. Please try again.");
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: 20 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900 relative overflow-hidden">
-      {/* Home Button */}
-      <button 
-        onClick={() => navigate("/")}
-        className="absolute top-6 left-6 flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all text-sm font-bold text-slate-600 hover:text-slate-900 z-50 border border-slate-100 group"
-      >
-        <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" /> Back to Home
-      </button>
-
-      {/* Decorative Blob */}
-      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-[600px] h-[600px] bg-rose-200/40 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-      
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
-      >
-        <div className="bg-rose-500 p-8 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-          <Shield className="w-12 h-12 text-white mx-auto mb-4" />
-          <h2 className="text-3xl font-black text-white tracking-tight relative z-10">{isLogin ? "Welcome Back" : "Join LifeLink"}</h2>
-          <p className="text-rose-100 mt-2 text-sm font-medium relative z-10">Secure medical access</p>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans text-gray-900 border-t-8 border-red-600">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-50 rounded-3xl mb-6 shadow-sm border border-red-100">
+            <Droplet className="text-red-600 w-10 h-10 fill-red-600 animate-pulse" />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight text-gray-900">LifeLink</h1>
+          <p className="text-gray-500 font-medium mt-2">Saving lives through simplicity.</p>
         </div>
 
-        <div className="p-8">
-          <div className="flex bg-slate-100 p-1 rounded-xl mb-8">
-             <button 
-               onClick={() => { setIsLogin(true); setError(""); }}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-             >
-               Login
-             </button>
-             <button 
-               onClick={() => { setIsLogin(false); setError(""); }}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-             >
-               Register
-             </button>
+        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-2xl shadow-gray-100">
+          <div className="flex bg-gray-50 p-1.5 rounded-2xl mb-8">
+            <button 
+              onClick={() => { setIsLogin(true); setError(""); }}
+              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${isLogin ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Sign In
+            </button>
+            <button 
+              onClick={() => { setIsLogin(false); setError(""); }}
+              className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${!isLogin ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Register
+            </button>
           </div>
 
-          <AnimatePresence mode="wait">
-             {error && (
-               <motion.div 
-                 initial={{ opacity: 0, y: -10 }} 
-                 animate={{ opacity: 1, y: 0 }} 
-                 exit={{ opacity: 0 }} 
-                 className="p-3 mb-6 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-lg text-center"
-               >
-                 {error}
-               </motion.div>
-             )}
-          </AnimatePresence>
-
-          <form onSubmit={handleAuth} className="space-y-5">
-            <AnimatePresence mode="popLayout">
-              {!isLogin && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-5 overflow-hidden"
-                >
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Account Type</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div 
-                        onClick={() => setRole("donor")}
-                        className={`cursor-pointer p-3 border-2 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${role === 'donor' ? 'border-rose-500 bg-rose-50 text-rose-600' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}`}
-                      >
-                        <Heart size={18} /> Donor
-                      </div>
-                      <div 
-                        onClick={() => setRole("hospital")}
-                        className={`cursor-pointer p-3 border-2 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${role === 'hospital' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}`}
-                      >
-                        <Building size={18} /> Hospital
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                      <input type="email" required={!isLogin} className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                      <input type="tel" required={!isLogin} className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="Emergency contact" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input type="text" required className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all focus:bg-white" placeholder="Enter username" value={username} onChange={(e) => setUsername(e.target.value)} />
-              </div>
+          {error && (
+            <div className="p-4 mb-8 bg-red-50 border border-red-100 text-red-600 text-sm font-bold rounded-2xl flex items-center gap-3">
+              <AlertCircle size={18} />
+              {error}
             </div>
-            
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input type="password" required className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all focus:bg-white" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-              </div>
-            </div>
+          )}
 
-            <motion.button 
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(225, 29, 72, 0.2)" }}
-              whileTap={{ scale: 0.98 }}
+          <form onSubmit={handleAuth} className="space-y-6">
+            {!isLogin && (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Account Type</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div 
+                      onClick={() => setRole("donor")}
+                      className={`cursor-pointer p-4 border-2 rounded-2xl flex items-center justify-center gap-3 font-black transition-all ${role === 'donor' ? 'border-red-600 bg-red-50 text-red-600 shadow-lg shadow-red-50' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
+                    >
+                      <Heart size={20} /> Donor
+                    </div>
+                    <div 
+                      onClick={() => setRole("hospital")}
+                      className={`cursor-pointer p-4 border-2 rounded-2xl flex items-center justify-center gap-3 font-black transition-all ${role === 'hospital' ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-lg shadow-blue-50' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
+                    >
+                      <Building size={20} /> Hospital
+                    </div>
+                  </div>
+                </div>
+
+                <InputField 
+                  icon={<Mail />} 
+                  label="Email Address" 
+                  type="email" 
+                  placeholder="name@email.com" 
+                  value={email} 
+                  onChange={setEmail} 
+                />
+                
+                <InputField 
+                  icon={<Phone />} 
+                  label="Phone Number" 
+                  type="tel" 
+                  placeholder="+91 00000 00000" 
+                  value={phone} 
+                  onChange={setPhone} 
+                />
+              </>
+            )}
+
+            <InputField 
+              icon={<Shield />} 
+              label="Username" 
+              type="text" 
+              placeholder="johndoe" 
+              value={username} 
+              onChange={setUsername} 
+            />
+
+            <InputField 
+              icon={<Lock />} 
+              label="Password" 
+              type="password" 
+              placeholder="••••••••" 
+              value={password} 
+              onChange={setPassword} 
+            />
+
+            <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group disabled:opacity-70"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 px-6 rounded-2xl transition-all shadow-xl shadow-red-100 flex items-center justify-center gap-3 group disabled:opacity-50"
             >
-              {isSubmitting ? "Processing..." : (isLogin ? <><LogIn size={18} /> Sign In</> : <><UserPlus size={18} /> Create Account</>)}
-            </motion.button>
+              {isSubmitting ? "Processing..." : (isLogin ? <><LogIn size={20} /> Sign In</> : <><UserPlus size={20} /> Join Now</>)}
+              {!isSubmitting && <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />}
+            </button>
           </form>
         </div>
-      </motion.div>
+
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-sm font-bold text-gray-400 hover:text-red-600 transition-colors">
+            ← Back to Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
+}
+
+function InputField({ icon, label, type, placeholder, value, onChange }) {
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{label}</label>
+      <div className="relative group">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-600 transition-colors">
+          {icon}
+        </div>
+        <input 
+          type={type} 
+          required 
+          className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium outline-none focus:bg-white focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all" 
+          placeholder={placeholder} 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)} 
+        />
+      </div>
+    </div>
+  );
+}
+
+function AlertCircle({ size }) {
+  return <div className="p-1 rounded-full bg-red-600 text-white"><Shield size={size / 1.5} /></div>;
 }
 
 export default Login;

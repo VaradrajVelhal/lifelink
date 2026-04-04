@@ -1,9 +1,8 @@
 from django.urls import path
-from .views import ListHospitalsView, CreateDonationView, ListDonationsView, PledgeOrganView
+from .views import DonorProfileView, ListDonationsView, CreateDonationView
 
 urlpatterns = [
-    path('hospitals/', ListHospitalsView.as_view()),
-    path('donate/', CreateDonationView.as_view()),
-    path('donations/', ListDonationsView.as_view()),
-    path('pledge-organ/', PledgeOrganView.as_view()),
+    path('profile/', DonorProfileView.as_view(), name='donor-profile'),
+    path('donations/', ListDonationsView.as_view(), name='donor-donations'),
+    path('donate/', CreateDonationView.as_view(), name='donor-donate'),
 ]

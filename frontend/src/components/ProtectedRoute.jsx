@@ -1,20 +1,12 @@
 import { Navigate } from 'react-router-dom';
 
-export default function ProtectedRoute({ children, allowedRole, adminOnly }) {
-  const token = localStorage.getItem('access');
-  const role = localStorage.getItem('role');
-  const isAdmin = localStorage.getItem('is_admin') === 'true';
+export default function ProtectedRoute({ children }) {
+  // Since we use sessions, the browser handles the cookie. 
+  // We can use a simple localStorage flag for client-side routing.
+  const username = localStorage.getItem('username');
 
-  if (!token) {
+  if (!username) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (adminOnly && !isAdmin) {
-    return <Navigate to={role === 'donor' ? '/donor-dashboard' : '/hospital-dashboard'} replace />;
-  }
-
-  if (allowedRole && role !== allowedRole) {
-    return <Navigate to={role === 'donor' ? '/donor-dashboard' : '/hospital-dashboard'} replace />;
   }
 
   return children;
