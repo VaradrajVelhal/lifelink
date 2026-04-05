@@ -4,4 +4,4 @@ djangorestframework==3.17.1
 psycopg2-binary==2.9.10
 python-dotenv==1.2.2
 sqlparse==0.5.5
-tzdata==2025.3
+tzdata==2025.3djangorestframework-simplejwt==5.5.0

@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .serializers import RegisterSerializer, MyTokenObtainPairSerializer
 from rest_framework.permissions import IsAuthenticated
 from blood_requests.models import BloodRequest
 from donors.models import DonorProfile, Donation
@@ -16,28 +17,14 @@ class RegisterView(APIView):
             return Response({"message": "User registered successfully"}, status=201)
         return Response(serializer.errors, status=400)
 
-class LoginView(APIView):
-    permission_classes = []
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return Response({
-                "message": "Login successful",
-                "username": user.username,
-                "role": user.role,
-                "is_admin": user.is_staff
-            })
-        return Response({"error": "Invalid credentials"}, status=401)
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        logout(request)
-        return Response({"message": "Logged out successfully"})
+        # JWT is stateless; logout is handled on frontend by clearing tokens.
+        return Response({"message": "Successfully logged out"})
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]

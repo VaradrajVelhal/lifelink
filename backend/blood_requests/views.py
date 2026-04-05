@@ -23,13 +23,32 @@ class ListRequestsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role == 'hospital':
-            requests = BloodRequest.objects.filter(hospital=request.user).order_by('-created_at')
+        role = request.user.role
+        blood_group_param = request.query_params.get('blood_group')
+        city_param = request.query_params.get('city')
+        status_param = request.query_params.get('status')
+
+        if role == 'hospital':
+            # Hospitals see their own requests by default
+            queryset = BloodRequest.objects.filter(hospital=request.user)
         else:
-            # Donors see all pending requests for their city or all if they want
-            requests = BloodRequest.objects.filter(status='pending').order_by('-created_at')
-        
-        serializer = BloodRequestSerializer(requests, many=True)
+            # Donors see requests matching their own blood group and status 'pending' by default
+            try:
+                donor = DonorProfile.objects.get(user=request.user)
+                queryset = BloodRequest.objects.filter(blood_group=donor.blood_group, status='pending')
+            except DonorProfile.DoesNotExist:
+                queryset = BloodRequest.objects.none()
+
+        # Apply optional filters from query params
+        if blood_group_param:
+            queryset = queryset.filter(blood_group=blood_group_param)
+        if city_param:
+            queryset = queryset.filter(city__icontains=city_param)
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        queryset = queryset.order_by('-created_at')
+        serializer = BloodRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
 class AcceptRequestView(APIView):
