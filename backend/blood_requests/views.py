@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.db import transaction
 from .models import BloodRequest
 from .serializers import BloodRequestSerializer
 from donors.models import DonorProfile
@@ -57,17 +58,23 @@ class AcceptRequestView(APIView):
     def post(self, request, request_id):
         if request.user.role != 'donor':
             return Response({"error": "Unauthorized"}, status=403)
-        
+
         try:
-            donor_profile = DonorProfile.objects.get(user=request.user)
-            blood_request = BloodRequest.objects.get(id=request_id, status='pending')
-            
-            blood_request.status = 'accepted'
-            blood_request.accepted_by = donor_profile
-            blood_request.save()
-            
+            with transaction.atomic():
+                blood_request = BloodRequest.objects.select_for_update().get(id=request_id)
+
+                if blood_request.status != 'pending':
+                    return Response(
+                        {"error": "Request not found or already accepted"},
+                        status=409
+                    )
+
+                blood_request.status = 'accepted'
+                blood_request.accepted_by = request.user
+                blood_request.save()
+
             return Response({"message": "Request accepted successfully"})
-        except (DonorProfile.DoesNotExist, BloodRequest.DoesNotExist):
+        except BloodRequest.DoesNotExist:
             return Response({"error": "Request not found or already accepted"}, status=404)
 
 class CompleteRequestView(APIView):

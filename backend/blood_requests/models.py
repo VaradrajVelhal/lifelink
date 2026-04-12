@@ -27,7 +27,7 @@ class BloodRequest(models.Model):
     city = models.CharField(max_length=100)
     urgency = models.CharField(max_length=20)  # normal / urgent
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    accepted_by = models.ForeignKey('donors.DonorProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='accepted_requests')
+    accepted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='accepted_requests')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -1,11 +1,10 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  // Since we use sessions, the browser handles the cookie. 
-  // We can use a simple localStorage flag for client-side routing.
-  const username = localStorage.getItem('username');
+  const token = localStorage.getItem("access");
 
-  if (!username) {
+  // Redirect to login if no valid JWT access token exists
+  if (!token || token === "null" || token === "undefined") {
     return <Navigate to="/auth" replace />;
   }
 
