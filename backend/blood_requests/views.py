@@ -2,10 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.db import transaction
-from .models import BloodRequest
+from django.db import transaction, IntegrityError
+from django.db.models import Count
+from .models import BloodRequest, RequestAcceptance
 from .serializers import BloodRequestSerializer
 from donors.models import DonorProfile
+
 
 class CreateRequestView(APIView):
     permission_classes = [IsAuthenticated]
@@ -20,6 +22,7 @@ class CreateRequestView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
+
 class ListRequestsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -30,13 +33,16 @@ class ListRequestsView(APIView):
         status_param = request.query_params.get('status')
 
         if role == 'hospital':
-            # Hospitals see their own requests by default
+            # Hospitals see their own requests (all statuses)
             queryset = BloodRequest.objects.filter(hospital=request.user)
         else:
-            # Donors see requests matching their own blood group and status 'pending' by default
+            # Donors see requests matching their blood group that still need donors
             try:
                 donor = DonorProfile.objects.get(user=request.user)
-                queryset = BloodRequest.objects.filter(blood_group=donor.blood_group, status='pending')
+                queryset = BloodRequest.objects.filter(
+                    blood_group=donor.blood_group,
+                    status__in=['pending', 'partially_filled']
+                )
             except DonorProfile.DoesNotExist:
                 queryset = BloodRequest.objects.none()
 
@@ -48,11 +54,22 @@ class ListRequestsView(APIView):
         if status_param:
             queryset = queryset.filter(status=status_param)
 
-        queryset = queryset.order_by('-created_at')
+        # Annotate accepted_count for efficient serialization & prefetch donors
+        queryset = queryset.annotate(
+            accepted_count_annotation=Count('acceptances')
+        ).prefetch_related(
+            'acceptances__donor'
+        ).order_by('-created_at')
+
         serializer = BloodRequestSerializer(queryset, many=True)
         return Response(serializer.data)
 
+
 class AcceptRequestView(APIView):
+    """
+    Allows a donor to accept a blood request.
+    Concurrency-safe: uses select_for_update() + unique_together constraint.
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request, request_id):
@@ -61,23 +78,69 @@ class AcceptRequestView(APIView):
 
         try:
             with transaction.atomic():
+                # Lock the blood request row to prevent race conditions
                 blood_request = BloodRequest.objects.select_for_update().get(id=request_id)
 
-                if blood_request.status != 'pending':
+                # 1. Check request is still accepting donors
+                if blood_request.status not in ('pending', 'partially_filled'):
                     return Response(
-                        {"error": "Request not found or already accepted"},
-                        status=409
+                        {"error": "This request is no longer accepting donors."},
+                        status=status.HTTP_409_CONFLICT
                     )
 
-                blood_request.status = 'accepted'
-                blood_request.accepted_by = request.user
+                # 2. Check donor hasn't already accepted
+                if RequestAcceptance.objects.filter(
+                    blood_request=blood_request, donor=request.user
+                ).exists():
+                    return Response(
+                        {"error": "You have already accepted this request."},
+                        status=status.HTTP_409_CONFLICT
+                    )
+
+                # 3. Check slots are still available
+                current_count = blood_request.acceptances.count()
+                if current_count >= blood_request.units:
+                    return Response(
+                        {"error": "All units have been filled."},
+                        status=status.HTTP_409_CONFLICT
+                    )
+
+                # 4. Create the acceptance record
+                RequestAcceptance.objects.create(
+                    blood_request=blood_request,
+                    donor=request.user
+                )
+
+                # 5. Update status based on new count
+                new_count = current_count + 1
+                if blood_request.status == 'pending':
+                    blood_request.status = 'partially_filled'
                 blood_request.save()
 
-            return Response({"message": "Request accepted successfully"})
+            return Response({
+                "message": "Request accepted successfully.",
+                "accepted_count": new_count,
+                "units": blood_request.units
+            })
+
         except BloodRequest.DoesNotExist:
-            return Response({"error": "Request not found or already accepted"}, status=404)
+            return Response(
+                {"error": "Blood request not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except IntegrityError:
+            # Fallback: unique_together constraint caught a duplicate
+            return Response(
+                {"error": "You have already accepted this request."},
+                status=status.HTTP_409_CONFLICT
+            )
+
 
 class CompleteRequestView(APIView):
+    """
+    Allows a hospital to mark a request as completed.
+    Only allowed when at least one donor has accepted (status = partially_filled).
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request, request_id):
@@ -85,9 +148,16 @@ class CompleteRequestView(APIView):
             return Response({"error": "Unauthorized"}, status=403)
 
         try:
-            blood_request = BloodRequest.objects.get(id=request_id, hospital=request.user, status='accepted')
+            blood_request = BloodRequest.objects.get(
+                id=request_id,
+                hospital=request.user,
+                status='partially_filled'
+            )
             blood_request.status = 'completed'
             blood_request.save()
-            return Response({"message": "Request marked as completed"})
+            return Response({"message": "Request marked as completed."})
         except BloodRequest.DoesNotExist:
-            return Response({"error": "Request not found or not in accepted status"}, status=404)
+            return Response(
+                {"error": "Request not found or not in partially filled status."},
+                status=status.HTTP_404_NOT_FOUND
+            )

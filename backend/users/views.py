@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import RegisterSerializer, MyTokenObtainPairSerializer
 from rest_framework.permissions import IsAuthenticated
-from blood_requests.models import BloodRequest
+from blood_requests.models import BloodRequest, RequestAcceptance
 from donors.models import DonorProfile, Donation
 
 class RegisterView(APIView):
@@ -30,6 +30,7 @@ class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         return Response({
+            "id": request.user.id,
             "username": request.user.username,
             "role": request.user.role,
             "email": request.user.email,
@@ -49,14 +50,17 @@ class DashboardStatsView(APIView):
         try:
             if request.user.role == 'hospital':
                 data["total_requests"] = BloodRequest.objects.filter(hospital=request.user).count()
-                data["pending_requests"] = BloodRequest.objects.filter(hospital=request.user, status='pending').count()
+                data["pending_requests"] = BloodRequest.objects.filter(
+                    hospital=request.user,
+                    status__in=['pending', 'partially_filled']
+                ).count()
             elif request.user.role == 'donor':
                 donor_profile = DonorProfile.objects.filter(user=request.user).first()
                 if donor_profile:
                     data["total_donations"] = Donation.objects.filter(donor=donor_profile).count()
                 
-                # accepted_by is now a ForeignKey to User
-                data["accepted_requests"] = BloodRequest.objects.filter(accepted_by=request.user, status='accepted').count()
+                # Count acceptances from the new RequestAcceptance model
+                data["accepted_requests"] = RequestAcceptance.objects.filter(donor=request.user).count()
         except Exception as e:
             # Log error if possible, but return safe data to prevent 500
             print(f"Stats Error: {e}")
