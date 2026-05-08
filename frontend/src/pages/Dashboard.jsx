@@ -22,10 +22,29 @@ export default function Dashboard() {
     urgency: "Normal"
   });
 
+  // Current logged-in user ID for checking if donor already accepted
+  const [currentUserId, setCurrentUserId] = useState(null);
+
   useEffect(() => {
     fetchData();
     fetchStats();
+    fetchUserInfo();
   }, []);
+
+  const fetchUserInfo = async () => {
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch("http://localhost:8000/api/users/me/", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUserId(data.id || data.pk);
+      }
+    } catch (err) {
+      console.error("Fetch User Info Error:", err);
+    }
+  };
 
   const fetchData = async () => {
     const token = localStorage.getItem("access");
@@ -84,12 +103,12 @@ export default function Dashboard() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
+      const data = await res.json();
       if (res.ok) {
         fetchData();
         fetchStats();
       } else {
-        const errorData = await res.json();
-        alert(errorData.detail || "Could not accept request.");
+        alert(data.error || "Could not accept request.");
       }
     } catch (err) {
       console.error("Accept Error:", err);
@@ -110,6 +129,53 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Complete Error:", err);
     }
+  };
+
+  /** Check if the current donor has already accepted a given request */
+  const hasCurrentDonorAccepted = (req) => {
+    if (!currentUserId || !req.acceptances) return false;
+    return req.acceptances.some((a) => a.donor === currentUserId);
+  };
+
+  /** Render status badge with appropriate color */
+  const renderStatusBadge = (status) => {
+    const styles = {
+      pending: 'bg-orange-500/10 text-orange-500',
+      partially_filled: 'bg-blue-500/10 text-blue-500',
+      completed: 'bg-green-500/10 text-green-500'
+    };
+    const labels = {
+      pending: 'Pending',
+      partially_filled: 'Partially Filled',
+      completed: 'Completed'
+    };
+    return (
+      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-current ${styles[status] || 'bg-gray-500/10 text-gray-500'}`}>
+        {labels[status] || status}
+      </span>
+    );
+  };
+
+  /** Render progress bar showing accepted_count / units */
+  const renderProgress = (req) => {
+    const count = req.accepted_count || 0;
+    const total = req.units || 1;
+    const pct = Math.min((count / total) * 100, 100);
+    const isFull = count >= total;
+
+    return (
+      <div className="flex flex-col gap-1.5 min-w-[100px]">
+        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+          <span className={isFull ? 'text-green-400' : 'text-gray-400'}>{count}/{total} filled</span>
+        </div>
+        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-green-500' : 'bg-red-500'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -172,6 +238,7 @@ export default function Dashboard() {
                 <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px] font-black tracking-[0.2em]">
                   <th className="px-10 py-6">Target Group</th>
                   <th className="px-10 py-6">Sector / Location</th>
+                  <th className="px-6 py-6 text-center">Progress</th>
                   <th className="px-10 py-6 text-center">Protocol Status</th>
                   {role === 'hospital' && <th className="px-10 py-6">Intelligence</th>}
                   <th className="px-10 py-6">Timestamp</th>
@@ -181,7 +248,7 @@ export default function Dashboard() {
               <tbody className="divide-y divide-white/5">
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-10 py-32 text-center">
+                    <td colSpan="7" className="px-10 py-32 text-center">
                       <div className="flex flex-col items-center gap-4 grayscale opacity-30">
                         <Activity size={48} className="text-gray-600" />
                         <p className="text-sm font-bold uppercase tracking-widest text-gray-600 italic">No active operations detected</p>
@@ -189,58 +256,75 @@ export default function Dashboard() {
                     </td>
                   </tr>
                 ) : (
-                  requests.map((req) => (
-                    <tr key={req.id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="px-10 py-8">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-red-600/10 rounded-2xl flex items-center justify-center font-black text-red-500 text-lg border border-red-900/30">
-                            {req.blood_group}
-                          </div>
-                          <div className="text-sm font-bold text-white uppercase tracking-tighter">{req.units} Units Ordered</div>
-                        </div>
-                      </td>
-                      <td className="px-10 py-8 text-sm font-bold text-gray-300 uppercase">{req.city}</td>
-                      <td className="px-10 py-8 text-center">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-current ${req.status === 'pending' ? 'bg-orange-500/10 text-orange-500' :
-                            req.status === 'accepted' ? 'bg-blue-500/10 text-blue-500' :
-                              'bg-green-500/10 text-green-500'
-                          }`}>
-                          {req.status}
-                        </span>
-                      </td>
-                      {role === 'hospital' && (
+                  requests.map((req) => {
+                    const donorAlreadyAccepted = hasCurrentDonorAccepted(req);
+                    const canAccept = !req.is_fulfilled && !donorAlreadyAccepted && req.status !== 'completed';
+
+                    return (
+                      <tr key={req.id} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-10 py-8">
-                          {req.donor_name ? (
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-white uppercase tracking-tight mb-1">{req.donor_name}</span>
-                              <span className="text-[10px] text-red-500 font-bold hover:underline cursor-pointer tracking-widest">{req.donor_contact}</span>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-red-600/10 rounded-2xl flex items-center justify-center font-black text-red-500 text-lg border border-red-900/30">
+                              {req.blood_group}
                             </div>
-                          ) : (
-                            <span className="text-[10px] text-gray-600 font-bold italic tracking-widest uppercase">Searching...</span>
+                            <div className="text-sm font-bold text-white uppercase tracking-tighter">{req.units} Units Ordered</div>
+                          </div>
+                        </td>
+                        <td className="px-10 py-8 text-sm font-bold text-gray-300 uppercase">{req.city}</td>
+                        <td className="px-6 py-8 text-center">
+                          {renderProgress(req)}
+                        </td>
+                        <td className="px-10 py-8 text-center">
+                          {renderStatusBadge(req.status)}
+                        </td>
+                        {role === 'hospital' && (
+                          <td className="px-10 py-8">
+                            {req.acceptances && req.acceptances.length > 0 ? (
+                              <div className="flex flex-col gap-2 max-h-24 overflow-y-auto">
+                                {req.acceptances.map((acceptance) => (
+                                  <div key={acceptance.id} className="flex flex-col">
+                                    <span className="text-xs font-black text-white uppercase tracking-tight">{acceptance.donor_name}</span>
+                                    <span className="text-[10px] text-red-500 font-bold hover:underline cursor-pointer tracking-widest">{acceptance.donor_contact}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-600 font-bold italic tracking-widest uppercase">Searching...</span>
+                            )}
+                          </td>
+                        )}
+                        <td className="px-10 py-8 text-xs font-medium text-gray-500 whitespace-nowrap">{new Date(req.created_at).toLocaleDateString()}</td>
+                        <td className="px-10 py-8 text-right">
+                          {role === 'donor' && req.status !== 'completed' && (
+                            donorAlreadyAccepted ? (
+                              <span className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-green-500/10 text-green-400 border border-green-500/20">
+                                <CheckCircle size={12} /> Accepted
+                              </span>
+                            ) : canAccept ? (
+                              <button
+                                onClick={() => handleAccept(req.id)}
+                                className="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all transform group-hover:scale-105"
+                              >
+                                Accept Task
+                              </button>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-gray-500/10 text-gray-600 border border-gray-500/20">
+                                Slots Full
+                              </span>
+                            )
+                          )}
+                          {role === 'hospital' && req.status === 'partially_filled' && (
+                            <button
+                              onClick={() => handleComplete(req.id)}
+                              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                            >
+                              Close Mission
+                            </button>
                           )}
                         </td>
-                      )}
-                      <td className="px-10 py-8 text-xs font-medium text-gray-500 whitespace-nowrap">{new Date(req.created_at).toLocaleDateString()}</td>
-                      <td className="px-10 py-8 text-right">
-                        {role === 'donor' && req.status === 'pending' && (
-                          <button
-                            onClick={() => handleAccept(req.id)}
-                            className="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all transform group-hover:scale-105"
-                          >
-                            Accept Task
-                          </button>
-                        )}
-                        {role === 'hospital' && req.status === 'accepted' && (
-                          <button
-                            onClick={() => handleComplete(req.id)}
-                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
-                          >
-                            Close Mission
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
