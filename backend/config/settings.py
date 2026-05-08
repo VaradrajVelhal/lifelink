@@ -32,11 +32,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-qiu8&=s*+^17(nx6et_pl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get(
+ALLOWED_HOSTS = [
     "lifelink-kfsz.onrender.com",
-    'ALLOWED_HOSTS',
-    'localhost,127.0.0.1'
-).split(',')
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
