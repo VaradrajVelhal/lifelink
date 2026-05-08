@@ -33,6 +33,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-qiu8&=s*+^17(nx6et_pl
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get(
+    "lifelink-kfsz.onrender.com",
     'ALLOWED_HOSTS',
     'localhost,127.0.0.1'
 ).split(',')
@@ -178,11 +179,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://lifelink-kfsz.onrender.com/"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://lifelink-kfsz.onrender.com/"
 ]
 
 SESSION_COOKIE_SAMESITE = 'Lax'
