@@ -12,6 +12,7 @@ export default function Dashboard() {
     total_donations: 0,
     accepted_requests: 0
   });
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,8 +35,8 @@ export default function Dashboard() {
   const fetchUserInfo = async () => {
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch("http://localhost:8000/api/users/me/", {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/api/users/me/`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -49,8 +50,8 @@ export default function Dashboard() {
   const fetchData = async () => {
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch("http://localhost:8000/api/requests/list/", {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/api/requests/list/`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setRequests(data);
@@ -64,8 +65,8 @@ export default function Dashboard() {
   const fetchStats = async () => {
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch("http://localhost:8000/api/users/dashboard-stats/", {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/api/users/dashboard-stats/`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setStats(data);
@@ -78,13 +79,13 @@ export default function Dashboard() {
     e.preventDefault();
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch("http://localhost:8000/api/requests/create/", {
+      const res = await fetch(`${API_URL}/api/requests/create/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newRequest)
+        body: JSON.stringify(newRequest),
       });
       if (res.ok) {
         setIsModalOpen(false);
@@ -99,9 +100,9 @@ export default function Dashboard() {
   const handleAccept = async (id) => {
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch(`http://localhost:8000/api/requests/${id}/accept/`, {
+      const res = await fetch(`${API_URL}/api/requests/${id}/accept/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (res.ok) {
@@ -118,9 +119,9 @@ export default function Dashboard() {
   const handleComplete = async (id) => {
     const token = localStorage.getItem("access");
     try {
-      const res = await fetch(`http://localhost:8000/api/requests/${id}/complete/`, {
+      const res = await fetch(`${API_URL}/api/requests/${id}/complete/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         fetchData();

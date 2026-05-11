@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 export default function LandingPage() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [stats, setStats] = useState({
     total_donors: 0,
     total_hospitals: 0,
@@ -11,10 +12,10 @@ export default function LandingPage() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/users/stats/")
-      .then(res => res.json())
-      .then(data => setStats(data))
-      .catch(err => console.error("Error fetching stats:", err));
+    fetch(`${API_URL}/api/users/stats/`)
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch((err) => console.error("Error fetching stats:", err));
   }, []);
 
   return (

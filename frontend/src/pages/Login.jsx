@@ -4,6 +4,7 @@ import { Droplet, Mail, Lock, User, Phone, MapPin, Activity, ArrowRight, ShieldC
 import Navbar from "../components/Navbar";
 
 export default function Login() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState("donor");
   const [formData, setFormData] = useState({
@@ -30,8 +31,8 @@ export default function Login() {
     setError("");
 
     const url = isLogin
-      ? "http://localhost:8000/api/users/login/"
-      : "http://localhost:8000/api/users/register/";
+      ? `${API_URL}/api/users/login/`
+      : `${API_URL}/api/users/register/`;
 
     // Pre-process registration data for backend mapping
     let payload = { ...formData, role };
