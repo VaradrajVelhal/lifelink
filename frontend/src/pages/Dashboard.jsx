@@ -141,9 +141,9 @@ export default function Dashboard() {
   /** Render status badge with appropriate color */
   const renderStatusBadge = (status) => {
     const styles = {
-      pending: 'bg-orange-500/10 text-orange-500',
-      partially_filled: 'bg-blue-500/10 text-blue-500',
-      completed: 'bg-green-500/10 text-green-500'
+      pending: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+      partially_filled: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
+      completed: 'bg-green-500/10 text-green-500 border-green-500/30'
     };
     const labels = {
       pending: 'Pending',
@@ -151,7 +151,7 @@ export default function Dashboard() {
       completed: 'Completed'
     };
     return (
-      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-current ${styles[status] || 'bg-gray-500/10 text-gray-500'}`}>
+      <span className={`inline-flex items-center justify-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap border ${styles[status] || 'bg-gray-500/10 text-gray-500 border-gray-500/30'}`}>
         {labels[status] || status}
       </span>
     );

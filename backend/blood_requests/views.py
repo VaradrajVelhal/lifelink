@@ -1,3 +1,4 @@
+from backend import blood_requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -113,7 +114,9 @@ class AcceptRequestView(APIView):
 
                 # 5. Update status based on new count
                 new_count = current_count + 1
-                if blood_request.status == 'pending':
+                if new_count >= blood_request.units:
+                    blood_request.status = 'completed'
+                else:
                     blood_request.status = 'partially_filled'
                 blood_request.save()
 
