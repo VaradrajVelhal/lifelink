@@ -14,7 +14,7 @@ class DonorProfileView(APIView):
             serializer = DonorProfileSerializer(profile)
             return Response(serializer.data)
         except DonorProfile.DoesNotExist:
-            return Response({"error": "Profile not found"}, status=404)
+            return Response({"error": "Profile not found!"}, status=404)
 
     def post(self, request):
         profile, created = DonorProfile.objects.get_or_create(user=request.user)
