@@ -1,9 +1,12 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Donation, DonorProfile
 from .serializers import DonationSerializer, DonorProfileSerializer
+
+logger = logging.getLogger('donors')
 
 class DonorProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -29,6 +32,9 @@ class ListDonationsView(APIView):
 
     def get(self, request):
         if request.user.role != 'donor':
+            logger.warning(
+                f"Unauthorized donation listing attempt: User={request.user.username}, Role={request.user.role}"
+            )
             return Response({"error": "Unauthorized"}, status=403)
         
         try:
@@ -44,6 +50,9 @@ class CreateDonationView(APIView):
 
     def post(self, request):
         if request.user.role != 'donor':
+            logger.warning(
+                f"Unauthorized donation creation attempt: User={request.user.username}, Role={request.user.role}"
+            )
             return Response({"error": "Unauthorized"}, status=403)
             
         try:

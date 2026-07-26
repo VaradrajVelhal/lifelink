@@ -1,0 +1,83 @@
+[2026-07-07 09:51:15,426] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:51:19,490] WARNING [django.request:249] Not Found: /api/requests/9999/accept/
+[2026-07-07 09:51:26,059] WARNING [django:18] Unauthorized access attempt: User=AnonymousUser, Path=/api/requests/create/, Method=POST, Status=401
+[2026-07-07 09:51:26,059] WARNING [django.request:249] Unauthorized: /api/requests/create/
+[2026-07-07 09:51:34,056] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:51:35,421] WARNING [django.request:249] Conflict: /api/requests/3/accept/
+[2026-07-07 09:51:42,145] INFO [users:32] Successful login: Username=hospital1
+[2026-07-07 09:51:43,141] WARNING [django.request:249] Not Found: /api/requests/4/complete/
+[2026-07-07 09:51:48,698] INFO [users:32] Successful login: Username=hospital1
+[2026-07-07 09:51:48,982] WARNING [django.request:249] Bad Request: /api/requests/create/
+[2026-07-07 09:51:54,636] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:51:59,170] INFO [blood_requests:138] Blood request accepted: ID=6, Donor=donor1, Units=2, Current Count=1
+[2026-07-07 09:52:07,928] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:52:08,435] WARNING [blood_requests:173] Unauthorized blood request completion attempt: User=donor1, Role=donor, Request ID=7
+[2026-07-07 09:52:08,436] WARNING [django.request:249] Forbidden: /api/requests/7/complete/
+[2026-07-07 09:52:15,148] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:52:15,413] WARNING [blood_requests:20] Unauthorized blood request creation attempt: User=donor1, Role=donor
+[2026-07-07 09:52:15,414] WARNING [django.request:249] Forbidden: /api/requests/create/
+[2026-07-07 09:52:22,759] INFO [users:32] Successful login: Username=hospital1
+[2026-07-07 09:52:23,794] INFO [blood_requests:187] Blood request completed: ID=9 (manually marked by hospital hospital1)
+[2026-07-07 09:52:29,616] INFO [users:32] Successful login: Username=hospital1
+[2026-07-07 09:52:30,285] INFO [blood_requests:28] Blood request created: ID=11, Hospital=hospital1, Blood Group=B+, Units=3
+[2026-07-07 09:52:38,822] INFO [users:32] Successful login: Username=hospital1
+[2026-07-07 09:52:39,095] WARNING [blood_requests:87] Unauthorized blood request acceptance attempt: User=hospital1, Role=hospital, Request ID=12
+[2026-07-07 09:52:39,096] WARNING [django.request:249] Forbidden: /api/requests/12/accept/
+[2026-07-07 09:52:47,165] INFO [users:32] Successful login: Username=donor1
+[2026-07-07 09:52:51,341] INFO [blood_requests:138] Blood request accepted: ID=13, Donor=donor1, Units=2, Current Count=1
+[2026-07-07 09:52:52,877] WARNING [django.request:249] Conflict: /api/requests/13/accept/
+[2026-07-07 09:53:02,029] INFO [users:32] Successful login: Username=varad
+[2026-07-07 09:53:06,528] INFO [users:32] Successful login: Username=varad
+[2026-07-07 09:53:08,552] INFO [users:41] User logged out: Username=varad
+[2026-07-07 09:53:12,462] WARNING [users:35] Failed login attempt: Username=varad, Reason=No active account found with the given credentials
+[2026-07-07 09:53:12,463] WARNING [django:18] Unauthorized access attempt: User=AnonymousUser, Path=/api/users/login/, Method=POST, Status=401
+[2026-07-07 09:53:12,463] WARNING [django.request:249] Unauthorized: /api/users/login/
+[2026-07-07 09:53:16,428] WARNING [users:22] Registration failed: Errors={'email': [ErrorDetail(string='This field is required.', code='required')]}
+[2026-07-07 09:53:16,429] WARNING [django.request:249] Bad Request: /api/users/register/
+[2026-07-07 09:53:20,337] WARNING [django:18] Unauthorized access attempt: User=AnonymousUser, Path=/api/users/me/, Method=GET, Status=401
+[2026-07-07 09:53:20,337] WARNING [django.request:249] Unauthorized: /api/users/me/
+[2026-07-07 09:53:23,878] WARNING [django:18] Unauthorized access attempt: User=AnonymousUser, Path=/api/users/logout/, Method=POST, Status=401
+[2026-07-07 09:53:23,878] WARNING [django.request:249] Unauthorized: /api/users/logout/
+[2026-07-07 09:53:27,699] INFO [users:32] Successful login: Username=varad
+[2026-07-07 09:53:39,673] INFO [users:20] User registered successfully: Username=john, Role=donor
+[2026-07-07 09:57:14,235] INFO [django.utils.autoreload:681] Watching for file changes with StatReloader
+[2026-07-07 09:57:49,174] WARNING [django.request:249] Not Found: /
+[2026-07-07 09:57:49,174] WARNING [django.server:249] "GET / HTTP/1.1" 404 2620
+[2026-07-07 09:57:49,294] WARNING [django.request:249] Not Found: /apple-touch-icon-precomposed.png
+[2026-07-07 09:57:49,297] WARNING [django.request:249] Not Found: /favicon.ico
+[2026-07-07 09:57:49,298] WARNING [django.server:249] "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 2734
+[2026-07-07 09:57:49,301] WARNING [django.request:249] Not Found: /apple-touch-icon-precomposed.png
+[2026-07-07 09:57:49,301] WARNING [django.server:249] "GET /favicon.ico HTTP/1.1" 404 2671
+[2026-07-07 09:57:49,306] WARNING [django.request:249] Not Found: /apple-touch-icon.png
+[2026-07-07 09:57:49,312] WARNING [django.server:249] "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 2734
+[2026-07-07 09:57:49,314] WARNING [django.request:249] Not Found: /favicon.ico
+[2026-07-07 09:57:49,315] WARNING [django.server:249] "GET /apple-touch-icon.png HTTP/1.1" 404 2698
+[2026-07-07 09:57:49,316] WARNING [django.server:249] "GET /favicon.ico HTTP/1.1" 404 2671
+[2026-07-07 09:57:49,404] WARNING [django.request:249] Not Found: /apple-touch-icon.png
+[2026-07-07 09:57:49,405] WARNING [django.server:249] "GET /apple-touch-icon.png HTTP/1.1" 404 2698
+[2026-07-07 09:57:57,554] INFO [django.server:249] "GET /admin/ HTTP/1.1" 302 0
+[2026-07-07 09:57:57,575] INFO [django.server:249] "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4080
+[2026-07-07 09:57:57,590] INFO [django.server:249] "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 3538
+[2026-07-07 09:57:57,592] INFO [django.server:249] "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+[2026-07-07 09:57:57,593] INFO [django.server:249] "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+[2026-07-07 09:57:57,594] INFO [django.server:249] "GET /static/admin/css/login.css HTTP/1.1" 200 951
+[2026-07-07 09:57:57,594] INFO [django.server:249] "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+[2026-07-07 09:57:57,594] INFO [django.server:249] "GET /static/admin/css/responsive.css HTTP/1.1" 200 16273
+[2026-07-07 09:57:57,594] INFO [django.server:249] "GET /static/admin/css/base.css HTTP/1.1" 200 23100
+[2026-07-07 09:58:50,332] INFO [django.server:249] "GET /api/users/stats/ HTTP/1.1" 200 63
+[2026-07-07 09:58:50,332] INFO [django.server:249] "GET /api/users/stats/ HTTP/1.1" 200 63
+[2026-07-07 09:58:55,938] INFO [django.server:249] "OPTIONS /api/users/login/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,034] INFO [users:32] Successful login: Username=test1
+[2026-07-07 09:58:59,035] INFO [django.server:249] "POST /api/users/login/ HTTP/1.1" 200 630
+[2026-07-07 09:58:59,065] INFO [django.server:249] "OPTIONS /api/requests/list/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,066] INFO [django.server:249] "OPTIONS /api/users/dashboard-stats/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,071] INFO [django.server:249] "OPTIONS /api/users/me/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,072] INFO [django.server:249] "OPTIONS /api/users/dashboard-stats/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,072] INFO [django.server:249] "OPTIONS /api/requests/list/ HTTP/1.1" 200 0
+[2026-07-07 09:58:59,072] INFO [django.server:249] "OPTIONS /api/users/me/ HTTP/1.1" 200 0
+[2026-07-07 09:59:01,733] INFO [django.server:249] "GET /api/users/me/ HTTP/1.1" 200 88
+[2026-07-07 09:59:01,734] INFO [django.server:249] "GET /api/users/me/ HTTP/1.1" 200 88
+[2026-07-07 09:59:02,807] INFO [django.server:249] "GET /api/users/dashboard-stats/ HTTP/1.1" 200 83
+[2026-07-07 09:59:02,807] INFO [django.server:249] "GET /api/users/dashboard-stats/ HTTP/1.1" 200 83
+[2026-07-07 09:59:03,470] INFO [django.server:249] "GET /api/requests/list/ HTTP/1.1" 200 353
+[2026-07-07 09:59:03,470] INFO [django.server:249] "GET /api/requests/list/ HTTP/1.1" 200 353

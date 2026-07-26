@@ -1,3 +1,4 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,17 +9,26 @@ from .models import BloodRequest, RequestAcceptance
 from .serializers import BloodRequestSerializer
 from donors.models import DonorProfile
 
+logger = logging.getLogger('blood_requests')
+
 
 class CreateRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         if request.user.role != 'hospital':
+            logger.warning(
+                f"Unauthorized blood request creation attempt: User={request.user.username}, Role={request.user.role}"
+            )
             return Response({"error": "Unauthorized"}, status=403)
 
         serializer = BloodRequestSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(hospital=request.user)
+            blood_request = serializer.save(hospital=request.user)
+            logger.info(
+                f"Blood request created: ID={blood_request.id}, Hospital={request.user.username}, "
+                f"Blood Group={blood_request.blood_group}, Units={blood_request.units}"
+            )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
@@ -74,6 +84,10 @@ class AcceptRequestView(APIView):
 
     def post(self, request, request_id):
         if request.user.role != 'donor':
+            logger.warning(
+                f"Unauthorized blood request acceptance attempt: User={request.user.username}, "
+                f"Role={request.user.role}, Request ID={request_id}"
+            )
             return Response({"error": "Unauthorized"}, status=403)
 
         try:
@@ -113,11 +127,20 @@ class AcceptRequestView(APIView):
 
                 # 5. Update status based on new count
                 new_count = current_count + 1
+                is_completed = False
                 if new_count >= blood_request.units:
                     blood_request.status = 'completed'
+                    is_completed = True
                 else:
                     blood_request.status = 'partially_filled'
                 blood_request.save()
+
+            logger.info(
+                f"Blood request accepted: ID={blood_request.id}, Donor={request.user.username}, "
+                f"Units={blood_request.units}, Current Count={new_count}"
+            )
+            if is_completed:
+                logger.info(f"Blood request completed: ID={blood_request.id} (automatically filled)")
 
             return Response({
                 "message": "Request accepted successfully.",
@@ -147,6 +170,10 @@ class CompleteRequestView(APIView):
 
     def post(self, request, request_id):
         if request.user.role != 'hospital':
+            logger.warning(
+                f"Unauthorized blood request completion attempt: User={request.user.username}, "
+                f"Role={request.user.role}, Request ID={request_id}"
+            )
             return Response({"error": "Unauthorized"}, status=403)
 
         try:
@@ -157,6 +184,7 @@ class CompleteRequestView(APIView):
             )
             blood_request.status = 'completed'
             blood_request.save()
+            logger.info(f"Blood request completed: ID={blood_request.id} (manually marked by hospital {request.user.username})")
             return Response({"message": "Request marked as completed."})
         except BloodRequest.DoesNotExist:
             return Response(

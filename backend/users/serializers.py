@@ -21,6 +21,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True)
     blood_group = serializers.CharField(write_only=True, required=False, allow_blank=True)
     city = serializers.CharField(write_only=True, required=False, allow_blank=True)
